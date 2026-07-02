@@ -1,71 +1,105 @@
 import socket
-import json
 import threading
+import json
+import time
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
 st = {}
-lck = threading.Lock()
 
-def rcv(ip, p):
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.bind((ip, p))
-    s.listen()
+class H(BaseHTTPRequestHandler):
+    def do_GET(s):
+        if s.path == "/":
+            s.send_response(200)
+            s.send_header("Content-type", "text/html")
+            s.end_headers()
+            
+            h = """<!DOCTYPE html>
+            <html>
+            <head>
+                <style>
+                    body { font-family: monospace; background: #1e1e1e; color: #fff; padding: 20px; }
+                    table { width: 100%; border-collapse: collapse; margin-top: 20px; table-layout: fixed; }
+                    th, td { border: 1px solid #444; padding: 10px; text-align: center; overflow: hidden; }
+                    th { background: #333; }
+                    th:nth-child(1) { width: 10%; } 
+                    th:nth-child(2) { width: 20%; } 
+                    th:nth-child(3) { width: 20%; } 
+                    th:nth-child(4) { width: 25%; } 
+                    th:nth-child(5) { width: 25%; } 
+                    
+                    .on { color: #4caf50; font-weight: bold; }
+                    .off { color: #f44336; font-weight: bold; }
+                </style>
+                <script>
+                    function u() {
+                        fetch('/d')
+                        .then(r => r.json())
+                        .then(d => {
+                            let t = "<table><tr><th>ID</th><th>STATUS</th><th>CLK</th><th>LDR</th><th>MTX</th></tr>";
+                            let k = Object.keys(d).sort();
+                            let now = Date.now() / 1000;
+                            
+                            for (let i of k) {
+                                let n = d[i];
+                                let is_on = (now - n.ts) < 8;
+                                let status_html = is_on ? "<span class='on'>ONLINE</span>" : "<span class='off'>OFFLINE</span>";
+                                
+                                t += `<tr>
+                                    <td>${i}</td>
+                                    <td>${status_html}</td>
+                                    <td>${n.c || "-"}</td>
+                                    <td>${n.ldr || "-"}</td>
+                                    <td>${n.mtx || "-"}</td>
+                                </tr>`;
+                            }
+                            t += "</table>";
+                            document.getElementById("b").innerHTML = t;
+                        });
+                    }
+                    setInterval(u, 500);
+                </script>
+            </head>
+            <body onload="u()">
+                <h2>Dash (MC714)</h2>
+                <div id="b"></div>
+            </body>
+            </html>"""
+            s.wfile.write(h.encode())
+            
+        elif s.path == "/d":
+            s.send_response(200)
+            s.send_header("Content-type", "application/json")
+            s.end_headers()
+            s.wfile.write(json.dumps(st).encode())
+
+class Server(HTTPServer):
+    allow_reuse_address = True
+
+def t_srv():
+    skt = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+    skt.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    skt.bind(("0.0.0.0", 9368))
+    skt.listen()
+    print("[DASH] Escutando eventos TCP na porta 9368...")
     while True:
-        c, _ = s.accept()
-        d = c.recv(4096).decode()
+        c, _ = skt.accept()
+        d = c.recv(1024).decode()
         if d:
             try:
-                m = json.loads(d)
-                n = m["id"]
-                with lck:
-                    if n not in st:
-                        st[n] = {"c": 0, "lg": [], "ldr": "-", "mtx": "-"}
-                    if "c" in m:
-                        st[n]["c"] = m["c"]
-                    if "msg" in m:
-                        st[n]["lg"].insert(0, m["msg"])
-                        st[n]["lg"] = st[n]["lg"][:10]
-                    if "ldr" in m:
-                        st[n]["ldr"] = m["ldr"]
-                    if "mtx" in m:
-                        st[n]["mtx"] = m["mtx"]
+                j = json.loads(d)
+                i = j["id"]
+                if i not in st:
+                    st[i] = {}
+                for k in j:
+                    st[i][k] = j[k]
+                st[i]["ts"] = time.time()
+                print(f"[DASH] Atualizacao recebida do Nó {i}")
             except:
                 pass
         c.close()
 
-class WH(BaseHTTPRequestHandler):
-    def log_message(s, fmt, *args):
-        pass
-
-    def do_GET(s):
-        s.send_response(200)
-        s.send_header("Content-type", "text/html")
-        s.end_headers()
-        with lck:
-            h = """
-            <html>
-            <head>
-                <meta http-equiv='refresh' content='1'>
-                <style>
-                    body { font-family: monospace; background: #111; color: #0f0; padding: 20px; }
-                    table { width: 100%; border-collapse: collapse; text-align: left; }
-                    th, td { padding: 12px; border: 1px solid #333; }
-                    th { background: #222; }
-                    .log { font-size: 0.8em; color: #aaa; }
-                </style>
-            </head>
-            <body>
-                <h2>MC714 - SISTEMAS DISTRIBUIDOS</h2>
-                <table>
-                    <tr><th>NO</th><th>LAMPORT (CLK)</th><th>ULTIMAS 10 MENSAGENS</th><th>LIDER</th><th>MUTEX</th></tr>
-            """
-            for n, d in sorted(st.items()):
-                lgs = "<br>".join(d["lg"])
-                h += f"<tr><td>{n}</td><td>{d['c']:02d}</td><td class='log'>{lgs}</td><td>{d['ldr']}</td><td>{d['mtx']}</td></tr>"
-            h += "</table></body></html>"
-        s.wfile.write(h.encode())
-
 if __name__ == "__main__":
-    threading.Thread(target=rcv, args=("0.0.0.0", 9368), daemon=True).start()
-    s = HTTPServer(("0.0.0.0", 9367), WH)
-    s.serve_forever()
+    threading.Thread(target=t_srv, daemon=True).start()
+    print("[DASH] Painel Web rodando em http://localhost:9367")
+    Server(("0.0.0.0", 9367), H).serve_forever()
