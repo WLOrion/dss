@@ -124,27 +124,27 @@ def monitor_lider():
                     threading.Thread(target=strt).start()
 
 if __name__ == "__main__":
-    n_id = sys.argv[1]
+    n_id = int(sys.argv[1])
     d_ip = sys.argv[2]
-    p = sys.argv[2]
+    p = int(sys.argv[3])
 
-    with open('nodes.csv', 'r') as f:
+    with open("nodes.csv") as f:
         r = csv.reader(f)
         for row in r:
-            if row[0] == n_id:
+            if int(row[0]) == n_id:
                 ip = row[1]
                 hb = int(row[2])
             else:
-                pr.append((row[0], row[1], int(row[2])))
-                
+                pr.append((int(row[0]), row[1], int(row[2])))
+
     base.init(ip, p, rcv)
     time.sleep(2)
-    
+
     if n_id == 1:
         threading.Thread(target=strt).start()
-        
+
     threading.Thread(target=monitor_lider, daemon=True).start()
-        
+
     try:
         while True:
             time.sleep(1)
