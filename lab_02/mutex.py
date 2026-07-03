@@ -127,20 +127,18 @@ def lp():
             b_req()
 
 if __name__ == "__main__":
-    n_id = int(sys.argv[1])
-    
-    if len(sys.argv) > 2:
-        d_ip = sys.argv[2]
-    
+    n_id = sys.argv[1]
+    d_ip = sys.argv[2]
+    p = sys.argv[2]
+
     with open('nodes.csv', 'r') as f:
         r = csv.reader(f)
         for row in r:
-            if int(row[0]) == n_id:
+            if row[0] == n_id:
                 ip = row[1]
-                p = int(row[2])
-                hb = int(row[3])
+                hb = int(row[2])
             else:
-                pr.append((int(row[0]), row[1], int(row[2]), int(row[3])))
+                pr.append((row[0], row[1], int(row[2])))
                 
     base.init(ip, p, rcv)
     time.sleep(2)

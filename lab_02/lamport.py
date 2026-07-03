@@ -60,16 +60,17 @@ def lp():
 
 if __name__ == "__main__":
     n_id = sys.argv[1]
-    
+    d_ip = sys.argv[2]
+    p = sys.argv[2]
+
     with open('nodes.csv', 'r') as f:
         r = csv.reader(f)
         for row in r:
             if row[0] == n_id:
                 ip = row[1]
-                p = int(row[2])
-                hb = int(row[3])
+                hb = int(row[2])
             else:
-                pr.append((row[0], row[1], int(row[2]), int(row[3])))
+                pr.append((row[0], row[1], int(row[2])))
                 
     base.init(ip, p, rcv)
     
