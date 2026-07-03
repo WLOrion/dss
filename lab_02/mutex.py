@@ -138,7 +138,7 @@ if __name__ == "__main__":
                 ip = row[1]
                 hb = int(row[2])
             else:
-                pr.append((int(row[0]), row[1], int(row[2])))
+                pr.append((int(row[0]), row[1], p))
                 
     base.init(ip, p, rcv)
     time.sleep(2)
