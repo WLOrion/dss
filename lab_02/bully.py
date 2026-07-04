@@ -48,20 +48,20 @@ def rcv(m):
     if t == "HBT":
         if s == ldr:
             last_hbt = time.time()
-        elif s < n_id:
+        elif s != ldr:
             with lck:
                 if not elc:
                     threading.Thread(target=strt, daemon=True).start()
 
     elif t == "ELC":
         snd(s, "OK")
-
         with lck:
             if not elc:
                 threading.Thread(target=strt, daemon=True).start()
 
     elif t == "OK":
         ok_r = True
+        elc = False
 
     elif t == "COR":
         ldr = s
