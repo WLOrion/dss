@@ -57,4 +57,4 @@ cat /tmp/mutex.log || true
 cat /tmp/lamport.log || true
 "
 
-echo "Instância ws-$id configurada."
+echo -e "Instância ws-$id configurada.\n"

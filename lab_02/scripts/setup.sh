@@ -22,4 +22,4 @@ gcloud compute firewall-rules create allow-p2p-traffic \
 
 # 3 - Acesso ao Dashboard
 echo "IP Interno do Dashboard (para passar como argumento): $(gcloud compute instances describe dash-node --format='value(networkInterfaces[0].networkIP)')"
-echo -e "\n=== INFRAESTRUTURA PRONTA ==="
+echo -e "\n=== INFRAESTRUTURA PRONTA ===\n"
