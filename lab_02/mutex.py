@@ -69,7 +69,7 @@ def rcv(m):
             rep += 1
             if rep >= exp and s == 1:
                 s = 2
-                m_st = "NA_REGIAO_CRITICA"r
+                m_st = "NA_REGIAO_CRITICA"
                 print(f"[{n_id}] {m_st}")
                 s_dsh(mtx=m_st)
                 threading.Thread(target=use_rc).start()
