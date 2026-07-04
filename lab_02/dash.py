@@ -5,14 +5,11 @@ import time
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
 st = {}
-lock = threading.Lock()
-
+lck = threading.Lock()
 
 class H(BaseHTTPRequestHandler):
-
     def do_GET(self):
         if self.path == "/":
-
             html = """
 <!DOCTYPE html>
 <html>
@@ -24,7 +21,6 @@ th, td { border:1px solid #444; padding:8px; text-align:center; }
 .on { color:#0f0; }
 .off { color:#f33; }
 </style>
-
 <script>
 function upd(){
     fetch('/d')
@@ -40,9 +36,9 @@ function upd(){
             html += `<tr>
                 <td>${i}</td>
                 <td>${on ? "<span class='on'>ONLINE</span>" : "<span class='off'>OFFLINE</span>"}</td>
-                <td>${n.c ?? "-"}</td>
-                <td>${n.ldr ?? "-"}</td>
-                <td>${n.mtx ?? "-"}</td>
+                <td>${on ? (n.c ?? "-") : "-"}</td>
+                <td>${on ? (n.ldr ?? "-") : "-"}</td>
+                <td>${on ? (n.mtx ?? "-") : "-"}</td>
             </tr>`;
         });
 
@@ -53,7 +49,6 @@ function upd(){
 setInterval(upd, 1000);
 </script>
 </head>
-
 <body onload="upd()">
 <h2>Dash MC714</h2>
 <div id="x"></div>
@@ -69,43 +64,37 @@ setInterval(upd, 1000);
             self.send_response(200)
             self.send_header("Content-type", "application/json")
             self.end_headers()
-
-            with lock:
+            with lck:
                 self.wfile.write(json.dumps(st).encode())
 
+def hndl(c):
+    try:
+        raw = c.recv(4096)
+        if raw:
+            msg = json.loads(raw.decode(errors="ignore"))
+            i = str(msg.get("id"))
+
+            with lck:
+                if i not in st:
+                    st[i] = {}
+                st[i].update(msg)
+                st[i]["ts"] = time.time()
+    except:
+        pass
+    finally:
+        c.close()
 
 def tcp_srv():
     s = socket.socket()
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     s.bind(("0.0.0.0", 9368))
-    s.listen()
+    s.listen(100)
 
     print("[DASH] TCP ON 9368")
 
     while True:
         c, _ = s.accept()
-
-        try:
-            raw = c.recv(4096)
-            if not raw:
-                continue
-
-            msg = json.loads(raw.decode(errors="ignore"))
-            i = str(msg.get("id"))
-
-            with lock:
-                if i not in st:
-                    st[i] = {}
-
-                st[i].update(msg)
-                st[i]["ts"] = time.time()
-
-        except:
-            pass
-
-        finally:
-            c.close()
-
+        threading.Thread(target=hndl, args=(c,), daemon=True).start()
 
 if __name__ == "__main__":
     threading.Thread(target=tcp_srv, daemon=True).start()
