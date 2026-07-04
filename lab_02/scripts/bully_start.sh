@@ -12,12 +12,10 @@ MAQUINA=$1
 ID_NO=$2
 PROJECT_DIR="/home/wlorion/dss/lab_02"
 
-
 DASH_IP=$(gcloud compute instances describe dash-node --format='value(networkInterfaces[0].networkIP)')
 
 echo "=== RESTAURANDO bully.py EM $MAQUINA (NÓ $ID_NO) ==="
 
-# O comando entra na pasta e sobe o bully.py de novo
 gcloud compute ssh $MAQUINA --command "cd $PROJECT_DIR && nohup python3 bully.py $ID_NO $DASH_IP 8001 >/tmp/bully.log 2>&1 &" --quiet
 
 echo "Processo bully.py restaurado com sucesso em $MAQUINA."
