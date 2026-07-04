@@ -99,7 +99,7 @@ def b_req():
         c += 1
         r_c = c
         rep = 0
-        exp = 0
+        exp = 9999
     
     m_st = "AGUARDANDO"
     print(f"[{n_id}] {m_st}")
