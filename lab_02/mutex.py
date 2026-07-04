@@ -16,6 +16,7 @@ c = 0
 s = 0 
 r_c = 0
 rep = 0
+exp = 0
 q = []
 lck = threading.Lock()
 
@@ -36,6 +37,7 @@ def s_dsh(msg=None, mtx=None):
 
 def rcv(m):
     global c, s, rep
+    
     t = m["t"]
     s_id = int(m["id"])
     m_c = m["c"]
@@ -65,7 +67,7 @@ def rcv(m):
     elif t == "REP":
         with lck:
             rep += 1
-            if rep == len(pr) and s == 1:
+            if rep >= exp and s == 1:
                 s = 2
                 m_st = "NA_REGIAO_CRITICA"
                 print(f"[{n_id}] {m_st}")
@@ -74,9 +76,11 @@ def rcv(m):
 
 def snd(d_id, t):
     global c
+    
     with lck:
         c += 1
         cur = c
+        
     for r in pr:
         if r[0] == d_id:
             m = {"id": n_id, "t": t, "c": cur}
@@ -88,22 +92,43 @@ def snd(d_id, t):
             break
 
 def b_req():
-    global s, r_c, rep, c
+    global s, r_c, rep, c, exp
+    
     with lck:
         s = 1
         c += 1
         r_c = c
         rep = 0
+        exp = 0
     
     m_st = "AGUARDANDO"
     print(f"[{n_id}] {m_st}")
     s_dsh(mtx=m_st)
     
+    a = 0
     for x in pr:
-        snd(x[0], "REQ")
+        try:
+            skt = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            skt.settimeout(0.5)
+            skt.connect((x[1], x[2]))
+            skt.close()
+            a += 1
+            snd(x[0], "REQ")
+        except:
+            pass
+            
+    with lck:
+        exp = a
+        if rep >= exp and s == 1:
+            s = 2
+            m_st = "NA_REGIAO_CRITICA"
+            print(f"[{n_id}] {m_st}")
+            s_dsh(mtx=m_st)
+            threading.Thread(target=use_rc).start()
 
 def use_rc():
     global s
+    
     time.sleep(5)
     
     with lck:
@@ -136,7 +161,7 @@ if __name__ == "__main__":
         for row in r:
             if int(row[0]) == n_id:
                 ip = row[1]
-                hb = int(row[2])
+                hb = int(row[-1])
             else:
                 pr.append((int(row[0]), row[1], p))
                 

@@ -64,13 +64,18 @@ def rcv(m):
         elc = False
 
     elif t == "COR":
-        ldr = s
-        elc = False
-        last_hbt = time.time()
+        if s >= n_id:
+            ldr = s
+            elc = False
+            last_hbt = time.time()
 
-        lg = f"LIDER: {ldr}"
-        print(f"[{n_id}] {lg}")
-        s_dsh(msg=lg, l_id=ldr)
+            lg = f"LIDER: {ldr}"
+            print(f"[{n_id}] {lg}")
+            s_dsh(msg=lg, l_id=ldr)
+        else:
+            with lck:
+                if not elc:
+                    threading.Thread(target=strt, daemon=True).start()
 
 def snd(d_id, t):
     for r in pr:
@@ -117,7 +122,7 @@ def strt():
 
     time.sleep(2)
 
-    if not ok_r:
+    if not ok_r and elc: 
         ldr = n_id
         elc = False
         last_hbt = time.time()
@@ -129,6 +134,8 @@ def strt():
         for x in pr:
             if x[0] < n_id:
                 snd(x[0], "COR")
+    else:
+        elc = False
 
 def monitor_lider():
     global last_hbt
