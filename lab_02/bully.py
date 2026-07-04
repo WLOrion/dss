@@ -48,7 +48,7 @@ def rcv(m):
     if t == "HBT":
         if s == ldr:
             last_hbt = time.time()
-        elif s != ldr:
+        elif s < n_id: 
             with lck:
                 if not elc:
                     threading.Thread(target=strt, daemon=True).start()
