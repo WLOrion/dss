@@ -31,3 +31,4 @@ nohup python3 dash.py >/tmp/dash.log 2>&1 </dev/null &
 "
 
 echo "Dash iniciado com sucesso."
+echo "URL do Dashboard: http://$(gcloud compute instances describe dash-node --format='value(networkInterfaces[0].accessConfigs[0].natIP)'):9367"

@@ -46,12 +46,6 @@ set -x
 
 cd $dir
 
-ps -ef | grep '[b]ully.py' | awk '{print \$2}' | xargs -r kill || true
-ps -ef | grep '[m]utex.py' | awk '{print \$2}' | xargs -r kill || true
-ps -ef | grep '[l]amport.py' | awk '{print \$2}' | xargs -r kill || true
-
-sleep 1
-
 nohup python3 bully.py $id $dip 8001 >/tmp/bully.log 2>&1 &
 nohup python3 mutex.py $id $dip 8002 >/tmp/mutex.log 2>&1 &
 nohup python3 lamport.py $id $dip 8003 >/tmp/lamport.log 2>&1 &
