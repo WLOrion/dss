@@ -77,8 +77,7 @@ def hndl(c):
             with lck:
                 if i not in st:
                     st[i] = {}
-                if "ldr" not in msg:
-                    st[i]["ldr"] = "-"
+
                 st[i].update(msg)
                 st[i]["ts"] = time.time()
     except:
