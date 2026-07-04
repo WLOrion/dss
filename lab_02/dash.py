@@ -78,7 +78,8 @@ def hndl(c):
                 if i not in st:
                     st[i] = {}
 
-                st[i].update(msg)
+                if "mtx" not in msg or msg["mtx"] != st[i].get("mtx"):
+                    st[i].update(msg)
                 st[i]["ts"] = time.time()
     except:
         pass
