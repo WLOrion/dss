@@ -48,6 +48,10 @@ def rcv(m):
     if t == "HBT":
         if s == ldr:
             last_hbt = time.time()
+        elif s < n_id:
+            with lck:
+                if not elc:
+                    threading.Thread(target=strt, daemon=True).start()
 
     elif t == "ELC":
         snd(s, "OK")
@@ -130,18 +134,12 @@ def monitor_lider():
     global last_hbt
 
     while True:
-        time.sleep(hb)
-
         if ldr == n_id:
-
             for x in pr:
                 if x[0] != n_id:
                     snd(x[0], "HBT")
-
         else:
-
             if not elc:
-
                 if ldr == 0:
                     lg = "SEM LIDER! Iniciando eleicao..."
                     print(f"[{n_id}] {lg}")
@@ -153,6 +151,8 @@ def monitor_lider():
                     print(f"[{n_id}] {lg}")
                     s_dsh(msg=lg, l_id="OFFLINE")
                     threading.Thread(target=strt, daemon=True).start()
+
+        time.sleep(hb)
 
 if __name__ == "__main__":
     n_id = int(sys.argv[1])
