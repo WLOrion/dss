@@ -18,7 +18,7 @@ r_c = 0
 rep = 0
 exp = 0
 q = []
-lck = threading.Lock()
+lck = threading.RLock()
 
 d_ip = "127.0.0.1" 
 d_p = 9368
@@ -69,7 +69,7 @@ def rcv(m):
             rep += 1
             if rep >= exp and s == 1:
                 s = 2
-                m_st = "NA_REGIAO_CRITICA"
+                m_st = "NA_REGIAO_CRITICA"r
                 print(f"[{n_id}] {m_st}")
                 s_dsh(mtx=m_st)
                 threading.Thread(target=use_rc).start()
@@ -146,10 +146,12 @@ def use_rc():
 def lp():
     while True:
         time.sleep(hb * 3)
+
         with lck:
             cur_s = s
-        if cur_s == 0 and random.random() > 0.5:
-            b_req()
+
+            if cur_s == 0 and random.random() > 0.5:
+                b_req()
 
 if __name__ == "__main__":
     n_id = int(sys.argv[1])
