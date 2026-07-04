@@ -16,8 +16,8 @@ class H(BaseHTTPRequestHandler):
 <head>
 <style>
 body { font-family: monospace; background:#111; color:#fff; }
-table { width:100%; border-collapse: collapse; }
-th, td { border:1px solid #444; padding:8px; text-align:center; }
+table { width:100%; border-collapse: collapse; table-layout: fixed; }
+th, td { border:1px solid #444; padding:8px; text-align:center; overflow: hidden; white-space: nowrap; }
 .on { color:#0f0; }
 .off { color:#f33; }
 </style>
