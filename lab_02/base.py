@@ -6,14 +6,28 @@ cb = None
 
 def srv(ip, p):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     s.bind((ip, p))
     s.listen()
+
     while True:
         conn, _ = s.accept()
-        d = conn.recv(1024).decode()
-        if d and cb:
-            cb(json.loads(d))
-        conn.close()
+
+        try:
+            d = conn.recv(1024)
+            if not d:
+                continue
+
+            m = json.loads(d.decode("utf-8"))
+
+            if cb:
+                cb(m)
+
+        except Exception as e:
+            print(f"[BASE] {e}")
+
+        finally:
+            conn.close()
 
 def init(ip, p, f):
     global cb
